@@ -1,0 +1,5 @@
+
+A set of APIs for interacting with github in ferite.
+
+You will need ferite-module-json - http://github.com/darkrock/ferite-module-json
+You will need the latest ferite - http://github.com/darkrock/ferite

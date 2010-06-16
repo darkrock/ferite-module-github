@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<yard name="github">
+
+	<property id="name" value="ferite-github" />
+	<property id="version" value="1.0" />
+	
+	<collection id="github">
+		<property type="prefix" value="$(FeriteModuleSourceDir)" />  
+
+		<list type="source">
+			<file name="github.feh" />
+		</list>
+	</collection>
+</yard>

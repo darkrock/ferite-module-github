@@ -1,0 +1,137 @@
+uses "json", "network", "console";
+
+namespace github {
+	
+	string api_username = '';
+	string api_key = '';
+	string api_root = 'http://github.com/api/v2/json';
+	
+	function authenticate( string username, string key ) {
+		.api_username = username;
+		.api_key = key;
+	}
+	
+	function call( string api_hook, array parameters, boolean post ) {
+		return .call( api_hook, parameters, post, true );
+	}
+
+	function call( string api_hook, array parameters, boolean post, boolean authenticate ) {
+		string url = "${.api_root}/$api_hook";
+		object request = (post ? Network.HTTP.post(url) : Network.HTTP.get(url));
+		object response = null;
+
+		if( authenticate ) {
+			parameters['login'] = github.api_username;
+			parameters['token'] = github.api_key;
+		}
+		if( parameters ) {
+			request.payload(parameters);
+		}
+		
+		response = request.run();
+		if( response.success() or response.redirect() ) {
+			if( response.body() ) {
+				return JSON.parse(response.body());
+			} else {
+				raise new Error("github is not responding correctly for ${request.url} = ${request.payload_pairs}");
+			}
+		} else {
+			raise new Error("github failed for ${request.url} = ${request.payload_pairs}");
+		}
+	}
+	
+	namespace Issue {
+		function search( string user, string repository, string term, boolean open ) {
+			return github.call("issues/search/$user/$repository/${(open ? 'open' : 'closed')}/${term.urlEncode()}", [], true).issues;
+		}
+		function list( string user, string repository, boolean open ) {
+			return github.call("issues/list/$user/$repository/${(open ? 'open' : 'closed')}", [], true).issues;
+		}
+		function labels( string user, string repository ) {
+			return github.call("issues/labels/$user/$repository", [], true).labels;
+		}
+		function addLabel( string user, string repository, string label, number id ) {
+			return github.call("issues/label/add/$user/$repository/${label.urlEncode()}/$id", [], true).labels;
+		}
+		function removeLabel( string user, string repository, string label, number id ) {
+			return github.call("issues/label/remove/$user/$repository/${label.urlEncode()}/$id", [], true).labels;
+		}
+
+		function view( string user, string repository, number id ) {
+			return github.call("issues/show/$user/$repository/$id", [], true).issue;
+		}
+		function add( string user, string repository, string title, string body ) {
+			return github.call("issues/open/$user/$repository", [ 'title' => title, 'body' => body ], true);
+		}
+		function comments( string user, string repository, number id ) {
+			return github.call("issues/comments/$user/$repository/$id", [], true).comments;
+		}
+		function comment( string user, string repository, number id, string comment ) {
+			return github.call("issues/comment/$user/$repository/$id", [ 'comment' => comment ], true).comment;
+		}
+	}
+	
+	namespace Repository {
+		function search( string term ) {
+			return github.call("repos/search/${term.urlEncode()}", [], false, false).repositories;
+		}
+		function list( string user ) {
+			return github.call("repos/show/${user.urlEncode()}", [], true).repositories; 
+		}
+		function create( string name, string description, string homepage, boolean visible ) {
+			return github.call("repos/create", [ 'name' => name, 'description' => description, 'homepage' => homepage, 'public' => (visible ? "1" : "0") ], true);
+		}
+		function delete( string name ) {
+			return github.call("repos/delete/${name.urlEncode()}", [ ], true);
+		}
+		function fork( string user, string repository ) {
+			return github.call("repos/${user.urlEncode()}/${repository.urlEncode()}", [], true).repository;
+		}
+		function show( string user, string repository ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}", [], false, false).repository;
+		}
+		function watch( string user, string repository ) {
+			return github.call("repos/watch/${user.urlEncode()}/${repository.urlEncode()}", [], true);
+		}
+		function forget( string user, string repository ) {
+			return github.call("repos/unwatch/${user.urlEncode()}/${repository.urlEncode()}", [], true);
+		}
+		function setDescription( string user, string repository, string description ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}", [ 'values[description]' => description ], true);
+		}
+		function setHomepage( string user, string repository, string description ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}", [ 'values[homepage]' => description ], true);
+		}
+		function toggleIssues( string user, string repository, boolean active ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}", [ 'values[has_issues]' => (active ? 'true' : 'false') ], true);
+		}
+		function toggleWiki( string user, string repository, boolean active ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}", [ 'values[has_wiki]' => (active ? 'true' : 'false') ], true);
+		}
+		function toggleDownloads( string user, string repository, boolean active ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}", [ 'values[has_downloads]' => (active ? 'true' : 'false') ], true);
+		}
+		function collaborators( string user, string repository ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/collaborators", [], true).collaborators; 
+		}
+		function contributors( string user, string repository ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/contributors/anon", [], true).contributors; 
+		}
+		function tags( string user, string repository ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/tags", [], true).tags; 
+		}
+		function branches( string user, string repository ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/branches", [], true).branches; 
+		}
+		function network( string user, string repository ) {
+			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/network", [], true).network; 
+		}
+		function setPrivate( string user, string repository ) {
+			return github.call("repos/set/private/${repository.urlEncode()}", [], true); 
+		}
+		function setPublic( string user, string repository ) {
+			return github.call("repos/set/public/${repository.urlEncode()}", [], true); 
+		}
+	}
+}
+
