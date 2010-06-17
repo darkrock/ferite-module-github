@@ -114,6 +114,12 @@ namespace github {
 		function collaborators( string user, string repository ) {
 			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/collaborators", [], true).collaborators; 
 		}
+		function collaboratorAdd( string repository, string collaborator ) {
+			return github.call("repos/collaborators/${repository.urlEncode()}/add/${collaborator.urlEncode()}", [], true); 
+		}
+		function collaboratorRemove( string repository, string collaborator ) {
+			return github.call("repos/collaborators/${repository.urlEncode()}/remove/${collaborator.urlEncode()}", [], true); 
+		}
 		function contributors( string user, string repository ) {
 			return github.call("repos/show/${user.urlEncode()}/${repository.urlEncode()}/contributors/anon", [], true).contributors; 
 		}
